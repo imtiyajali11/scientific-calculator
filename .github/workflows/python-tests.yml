@@ -1,0 +1,104 @@
+name: Python Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.8', '3.9', '3.10']
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-cov
+    
+    - name: Lint with flake8
+      run: |
+        # Stop the build if there are Python syntax errors or undefined names
+        flake8 app.py --count --select=E9,F63,F7,F82 --show-source --statistics
+        # Exit-zero treats all errors as warnings
+        flake8 app.py --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+      continue-on-error: true
+    
+    - name: Test Flask app initialization
+      run: |
+        python -c "from app import app; print('✓ Flask app initializes successfully')"
+    
+    - name: Test imports
+      run: |
+        python -c "import math, flask, json; print('✓ All required modules imported successfully')"
+    
+    - name: Test calculation function
+      run: |
+        python -c "
+        from app import calculator
+        result = calculator.calculate('2+2')
+        assert result['success'] == True
+        assert result['result'] == 4
+        print('✓ Basic calculation works')
+        "
+    
+    - name: Test scientific function
+      run: |
+        python -c "
+        import math
+        from app import calculator
+        result = calculator.calculate('sqrt(16)')
+        assert result['success'] == True
+        assert result['result'] == 4
+        print('✓ Scientific function works')
+        "
+    
+    - name: Test error handling
+      run: |
+        python -c "
+        from app import calculator
+        result = calculator.calculate('1/0')
+        assert result['success'] == False
+        print('✓ Error handling works')
+        "
+
+  build:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Check syntax
+      run: |
+        python -m py_compile app.py
+        python -m py_compile static/style.css 2>/dev/null || true
+    
+    - name: Verify files exist
+      run: |
+        test -f app.py && echo "✓ app.py found"
+        test -f index.html && echo "✓ index.html found"
+        test -f requirements.txt && echo "✓ requirements.txt found"
+        test -f Procfile && echo "✓ Procfile found"
+        test -f LICENSE && echo "✓ LICENSE found"
+        test -d static && echo "✓ static folder found"

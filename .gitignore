@@ -1,0 +1,32 @@
+# Virtual Environment
+.venv/
+venv/
+env/
+__pycache__/
+
+# IDE and Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Python
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+
+# Flask
+instance/
+.webassets-cache
+
+# Environment variables
+.env
+.env.local
+
+# OS Files
+Thumbs.db
+.DS_Store
